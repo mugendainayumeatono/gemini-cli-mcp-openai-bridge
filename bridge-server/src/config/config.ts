@@ -15,6 +15,8 @@ import {
   DEFAULT_GEMINI_EMBEDDING_MODEL,
   FileDiscoveryService,
   TelemetryTarget,
+  SimpleExtensionLoader,
+  type GeminiCLIExtension,
 } from '@google/gemini-cli-core';
 import { Settings } from './settings.js';
 
@@ -40,23 +42,22 @@ const logger = {
 // TODO: Consider if App.tsx should get memory via a server call or if Config should refresh itself.
 export async function loadHierarchicalGeminiMemory(
   currentWorkingDirectory: string,
-  debugMode: boolean,
   fileService: FileDiscoveryService,
-  extensionContextFilePaths: string[] = [],
+  extensionLoader: SimpleExtensionLoader,
 ): Promise<{ memoryContent: string; fileCount: number }> {
-  if (debugMode) {
-    logger.debug(
-      `CLI: Delegating hierarchical memory load to server for CWD: ${currentWorkingDirectory}`,
-    );
-  }
   // Directly call the server function.
   // The server function will use its own homedir() for the global path.
-  return loadServerHierarchicalMemory(
+  const result = await loadServerHierarchicalMemory(
     currentWorkingDirectory,
-    debugMode,
+    [], // includeDirectoriesToReadGemini
     fileService,
-    extensionContextFilePaths,
+    extensionLoader,
+    true, // folderTrust
   );
+  return {
+    memoryContent: result.memoryContent.project || '', // Simplify for bridge use
+    fileCount: result.fileCount,
+  };
 }
 
 export async function loadServerConfig(
@@ -83,9 +84,20 @@ export async function loadServerConfig(
 
   const resolvedTargetDir = targetDir || process.cwd();
 
-  const extensionContextFilePaths = extensions.flatMap((e) => e.contextFiles);
-
   const fileService = new FileDiscoveryService(resolvedTargetDir);
+  
+  // Adapt bridge extensions to core extensions
+  const gcliExtensions: GeminiCLIExtension[] = extensions.map(e => ({
+    name: e.config.name,
+    version: e.config.version,
+    isActive: true,
+    path: '', // Not strictly needed for memory loading here
+    id: e.config.name,
+    mcpServers: e.config.mcpServers,
+    contextFiles: e.contextFiles,
+  }));
+  const extensionLoader = new SimpleExtensionLoader(gcliExtensions);
+
   // Call the (now wrapper) loadHierarchicalGeminiMemory which calls the server's version
   let memoryContent = '';
   let fileCount = 0;
@@ -93,9 +105,8 @@ export async function loadServerConfig(
   if (loadInternalPrompt) {
     const memoryResult = await loadHierarchicalGeminiMemory(
       resolvedTargetDir,
-      debugMode,
       fileService,
-      extensionContextFilePaths,
+      extensionLoader,
     );
     memoryContent = memoryResult.memoryContent;
     fileCount = memoryResult.fileCount;
@@ -156,7 +167,7 @@ export async function loadServerConfig(
     fileDiscoveryService: fileService,
     bugCommand: settings.bugCommand,
     model: model, // <-- Use the new model selection logic
-    extensionContextFilePaths,
+    extensionContextFilePaths: extensions.flatMap(e => e.contextFiles),
   });
 }
 

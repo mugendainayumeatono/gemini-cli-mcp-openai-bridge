@@ -7,7 +7,7 @@
 import {
   Config,
   ApprovalMode,
-  sessionId,
+  createSessionId,
   loadServerHierarchicalMemory,
   FileDiscoveryService,
   DEFAULT_GEMINI_MODEL,
@@ -188,7 +188,7 @@ async function startMcpServer() {
   const config = await loadServerConfig(
     settings.merged,
     extensions,
-    sessionId,
+    createSessionId(),
     debugMode,
     useInternalPrompt,
     toolsModel,

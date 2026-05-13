@@ -4,13 +4,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { type Config, GeminiChat } from '@google/gemini-cli-core';
+import {
+  type Config,
+  GeminiChat,
+  type AgentLoopContext,
+  StreamEventType,
+  LlmRole,
+  type ModelConfigKey,
+  partListUnionToString,
+} from '@google/gemini-cli-core';
 import {
   type Content,
   type Part,
   type Tool,
   type FunctionDeclaration,
   type GenerateContentConfig,
+  type GenerateContentResponse,
   FunctionCallingConfigMode,
 } from '@google/genai';
 import {
@@ -60,12 +69,10 @@ function sanitizeGeminiSchema(schema: any): any {
 
 export class GeminiApiClient {
   private readonly config: Config;
-  private readonly contentGenerator;
   private readonly debugMode: boolean;
 
   constructor(config: Config, debugMode = false) {
     this.config = config;
-    this.contentGenerator = this.config.getGeminiClient().getContentGenerator();
     this.debugMode = debugMode;
   }
 
@@ -269,22 +276,17 @@ export class GeminiApiClient {
       throw new Error('No message to send.');
     }
 
+    const geminiTools = this.convertOpenAIToolsToGemini(tools);
+
     // Create a new, isolated chat session for each request.
     const oneShotChat = new GeminiChat(
-      this.config,
-      this.contentGenerator,
-      {},
+      this.config as any as AgentLoopContext,
+      clientSystemInstruction ? partListUnionToString(clientSystemInstruction.parts) : '',
+      geminiTools || [],
       history,
     );
 
-    const geminiTools = this.convertOpenAIToolsToGemini(tools);
-
     const generationConfig: GenerateContentConfig = {};
-    // If a system prompt was extracted from the client's request, use it. This
-    // will override any system prompt set in the GeminiChat instance.
-    if (clientSystemInstruction) {
-      generationConfig.systemInstruction = clientSystemInstruction;
-    }
 
     if (tool_choice && tool_choice !== 'auto') {
       generationConfig.toolConfig = {
@@ -302,33 +304,38 @@ export class GeminiApiClient {
 
     
     const prompt_id = Math.random().toString(16).slice(2);
-    const geminiStream = await oneShotChat.sendMessageStream({
-      message: lastMessage.parts || [],
-      config: {
-        tools: geminiTools,
-        ...generationConfig,
-      },
-    }, prompt_id);
+    const modelConfigKey: ModelConfigKey = { model };
+    
+    const geminiStream = await oneShotChat.sendMessageStream(
+      modelConfigKey,
+      lastMessage.parts || [],
+      prompt_id,
+      new AbortController().signal,
+      LlmRole.MAIN,
+    );
 
     logger.debug(this.debugMode, 'Got stream from Gemini.');
 
     // Transform the event stream to a simpler StreamChunk stream
     return (async function* (): AsyncGenerator<StreamChunk> {
-      for await (const response of geminiStream) {
-        const parts = response.candidates?.[0]?.content?.parts || [];
-        for (const part of parts) {
-          if (part.text) {
-            yield { type: 'text', data: part.text };
-          }
-          if (part.functionCall && part.functionCall.name) {
-            yield {
-              type: 'tool_code',
-              data: {
-                name: part.functionCall.name,
-                args:
-                  (part.functionCall.args as Record<string, unknown>) ?? {},
-              },
-            };
+      for await (const event of geminiStream) {
+        if (event.type === StreamEventType.CHUNK) {
+          const response = event.value as GenerateContentResponse;
+          const parts = response.candidates?.[0]?.content?.parts || [];
+          for (const part of parts) {
+            if (part.text) {
+              yield { type: 'text', data: part.text };
+            }
+            if (part.functionCall && part.functionCall.name) {
+              yield {
+                type: 'tool_code',
+                data: {
+                  name: part.functionCall.name,
+                  args:
+                    (part.functionCall.args as Record<string, unknown>) ?? {},
+                },
+              };
+            }
           }
         }
       }

@@ -1,18 +1,36 @@
 {
-    "extends": "../../tsconfig.json",
     "compilerOptions": {
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "noImplicitAny": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "forceConsistentCasingInFileNames": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noUnusedLocals": true,
+        "strictBindCallApply": true,
+        "strictFunctionTypes": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "resolveJsonModule": true,
+        "sourceMap": true,
+        "composite": true,
+        "incremental": true,
+        "declaration": true,
+        "allowSyntheticDefaultImports": true,
+        "verbatimModuleSyntax": true,
+        "lib": ["ES2023"],
+        "module": "NodeNext",
+        "moduleResolution": "nodenext",
+        "target": "es2022",
+        "types": ["node", "vitest/globals"],
         "outDir": "dist",
         "rootDir": "src"
     },
     "include": [
-        "src/**/*.ts"
-    ],
-    "references": [
-        {
-            "path": "../core"
-        },
-        {
-            "path": "../cli"
-        }
+        "src/**/*.ts",
+        "test/**/*.ts"
     ]
 }
