@@ -281,7 +281,7 @@ export class GeminiApiClient {
     // Create a new, isolated chat session for each request.
     const oneShotChat = new GeminiChat(
       this.config as any as AgentLoopContext,
-      clientSystemInstruction ? partListUnionToString(clientSystemInstruction.parts) : '',
+      clientSystemInstruction?.parts ? partListUnionToString(clientSystemInstruction.parts) : '',
       geminiTools || [],
       history,
     );

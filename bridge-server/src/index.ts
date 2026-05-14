@@ -196,11 +196,11 @@ async function startMcpServer() {
   );
 
   // REFACTORED: Authentication logic with improved verbosity and error handling.
-  let selectedAuthType = settings.merged.selectedAuthType;
+  let selectedAuthType = settings.merged.selectedAuthType || settings.merged.security?.auth?.selectedType;
   let authReason = '';
 
   if (selectedAuthType) {
-    authReason = ' (from .gemini/settings.json)';
+    authReason = ` (from .gemini/settings.json, type: ${selectedAuthType})`;
   } else if (process.env.GEMINI_API_KEY) {
     selectedAuthType = AuthType.USE_GEMINI;
     authReason = ' (fallback to GEMINI_API_KEY environment variable)';

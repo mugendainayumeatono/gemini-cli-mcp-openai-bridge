@@ -10,7 +10,6 @@ import {
   setGeminiMdFilename as setServerGeminiMdFilename,
   getCurrentGeminiMdFilename,
   ApprovalMode,
-  GEMINI_CONFIG_DIR as GEMINI_DIR,
   DEFAULT_GEMINI_FLASH_MODEL,
   DEFAULT_GEMINI_EMBEDDING_MODEL,
   FileDiscoveryService,
@@ -130,7 +129,6 @@ export async function loadServerConfig(
     targetDir: resolvedTargetDir,
     debugMode,
     question: undefined,
-    fullContext: false,
     coreTools: settings.coreTools || undefined,
     excludeTools: settings.excludeTools || undefined,
     toolDiscoveryCommand: settings.toolDiscoveryCommand,
@@ -141,7 +139,7 @@ export async function loadServerConfig(
     geminiMdFileCount: fileCount,
     approvalMode: ApprovalMode.YOLO,
     showMemoryUsage: settings.showMemoryUsage || false,
-    accessibility: settings.accessibility,
+    accessibility: settings.accessibility as any,
     telemetry: {
       enabled: settings.telemetry?.enabled,
       target: settings.telemetry?.target as TelemetryTarget,
@@ -167,7 +165,6 @@ export async function loadServerConfig(
     fileDiscoveryService: fileService,
     bugCommand: settings.bugCommand,
     model: model, // <-- Use the new model selection logic
-    extensionContextFilePaths: extensions.flatMap(e => e.contextFiles),
   });
 }
 
@@ -192,7 +189,7 @@ function findEnvFile(startDir: string): string | null {
   let currentDir = path.resolve(startDir);
   while (true) {
     // prefer gemini-specific .env under GEMINI_DIR
-    const geminiEnvPath = path.join(currentDir, GEMINI_DIR, '.env');
+    const geminiEnvPath = path.join(currentDir, '.gemini', '.env');
     if (fs.existsSync(geminiEnvPath)) {
       return geminiEnvPath;
     }
@@ -203,7 +200,7 @@ function findEnvFile(startDir: string): string | null {
     const parentDir = path.dirname(currentDir);
     if (parentDir === currentDir || !parentDir) {
       // check .env under home as fallback, again preferring gemini-specific .env
-      const homeGeminiEnvPath = path.join(os.homedir(), GEMINI_DIR, '.env');
+      const homeGeminiEnvPath = path.join(os.homedir(), '.gemini', '.env');
       if (fs.existsSync(homeGeminiEnvPath)) {
         return homeGeminiEnvPath;
       }

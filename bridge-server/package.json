@@ -8,7 +8,7 @@
   },
   "repository": "Intelligent-Internet/gemini-cli-common-bridge",
   "scripts": {
-    "build": "node ../../scripts/build_package.js",
+    "build": "tsc -b --force",
     "clean": "rm -rf dist",
     "start": "node dist/index.js",
     "debug": "node --inspect-brk dist/index.js",
@@ -31,8 +31,10 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/command-exists": "^1.2.3",
     "@types/express": "^5.0.3",
     "@types/node": "^24.1.0",
+    "@types/yargs": "^17.0.35",
     "typescript": "^5.3.3",
     "vitest": "^3.1.1"
   },

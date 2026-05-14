@@ -4,7 +4,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { z } from 'zod';
 import {
   type Config,
-  type Tool as GcliTool,
+  type AnyDeclarativeTool as GcliTool,
   type ToolResult,
   GeminiChat,
   WebFetchTool,
@@ -123,7 +123,7 @@ export class GcliMcpBridge {
           // NEW: 在 server/info 中声明安全策略
           geminiCliSecurityPolicy: this.securityPolicy,
         },
-      },
+      } as any,
     );
     await this.registerAllGcliTools(server);
     return server;
@@ -366,9 +366,9 @@ export class GcliMcpBridge {
 
         // Create a new tool instance with the proxied config.
         if (tool.name === 'google_web_search') {
-          toolInstanceForExecution = new WebSearchTool(proxyConfig);
+          toolInstanceForExecution = new WebSearchTool(proxyConfig as any, null as any);
         } else {
-          toolInstanceForExecution = new WebFetchTool(proxyConfig);
+          toolInstanceForExecution = new WebFetchTool(proxyConfig as any, null as any);
         }
       }
     }
@@ -421,10 +421,8 @@ export class GcliMcpBridge {
         logger.info('MCP tool call started', { toolName: tool.name, args });
         try {
           // toolInstanceForExecution is either the original tool or a new instance with a custom model config.
-          const result = await toolInstanceForExecution.execute(
-            args,
-            extra.signal,
-          );
+          const invocation = toolInstanceForExecution.build(args as any);
+          const result = await invocation.execute({ signal: extra.signal } as any);
           const durationMs = Date.now() - startTime;
           logger.info('MCP tool call finished', {
             toolName: tool.name,

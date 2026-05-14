@@ -23,7 +23,7 @@ const VALID_SANDBOX_COMMANDS: ReadonlyArray<SandboxConfig['command']> = [
   'sandbox-exec',
 ];
 
-function isSandboxCommand(value: string): value is SandboxConfig['command'] {
+function isSandboxCommand(value: string): value is any {
   return (VALID_SANDBOX_COMMANDS as readonly string[]).includes(value);
 }
 
@@ -59,8 +59,8 @@ function getSandboxCommand(
       process.exit(1);
     }
     // confirm that specified command exists
-    if (commandExists.sync(sandbox)) {
-      return sandbox;
+    if (commandExists.sync(sandbox as string)) {
+      return sandbox as any;
     }
     console.error(
       `ERROR: missing sandbox command '${sandbox}' (from GEMINI_SANDBOX)`,
@@ -103,5 +103,5 @@ export async function loadSandboxConfig(
     process.env.GEMINI_SANDBOX_IMAGE ??
     packageJson?.config?.sandboxImageUri;
 
-  return command && image ? { command, image } : undefined;
+  return command && image ? ({ command, image, enabled: true } as SandboxConfig) : undefined;
 }

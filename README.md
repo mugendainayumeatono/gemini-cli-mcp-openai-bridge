@@ -29,9 +29,16 @@
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) v18 or higher
-- All dependencies and configuration required by [Gemini CLI](https://github.com/google-gemini/gemini-cli)
-  - This project automatically installs `gemini-cli` as a submodule (from the official `gemini-cli` GitHub repository), so you don't need to install it separately.
-  - If you already have `gemini-cli` installed, it will be overridden by this project's submodule version.
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli) configuration
+  - This project uses the official `@google/gemini-cli-core` package.
+  - Authentication and settings are shared with your local `gemini-cli` installation.
+
+## Recent Updates (May 2026)
+
+- **Standalone Workspace**: Refactored the project to run as a standard NPM workspace, removing the tight coupling with the `gemini-cli` source tree.
+- **Core API Compatibility**: Updated to support `@google/gemini-cli-core@0.42.0`, including new tool execution patterns and configuration schemas.
+- **Enhanced Auth Detection**: Improved support for the latest `gemini-cli` authentication format (`security.auth.selectedType`), ensuring seamless login via OAuth or API keys.
+- **Optimized Build**: Added forced compilation to ensure `dist` artifacts are always consistent.
 
 ## Installation
 

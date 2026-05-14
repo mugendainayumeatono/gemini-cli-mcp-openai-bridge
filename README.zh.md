@@ -25,9 +25,16 @@
 ## 先决条件
 
 -   [Node.js](https://nodejs.org/) v18 或更高版本。
--   [Gemini CLI](https://github.com/google-gemini/gemini-cli) 所要求的所有依赖项和配置。
-  -   本项目会自动安装 `gemini-cli` 的子模块（来自 `gemini-cli` 的 官方Github），因此你不需要单独安装它。
-  -   如果你已经安装了 `gemini-cli`，将会被本项目的子模块覆盖版本。
+-   [Gemini CLI](https://github.com/google-gemini/gemini-cli) 的配置环境。
+    - 本项目现在直接使用官方的 `@google/gemini-cli-core` npm 包。
+    - 认证信息和设置将与您本地安装的 `gemini-cli` 共享。
+
+## 最近更新 (2026年5月)
+
+- **独立工作区重构**: 项目已重构为标准的 NPM Workspace，解除了与 `gemini-cli` 源码树的强耦合。
+- **核心 API 兼容性**: 已更新以支持 `@google/gemini-cli-core@0.42.0`，适配了新的工具执行模式和配置架构。
+- **增强型认证探测**: 完善了对最新 `gemini-cli` 认证格式（`security.auth.selectedType`）的支持，确保 OAuth 或 API Key 认证能被正确识别。
+- **优化构建流程**: 引入强制编译机制，确保在清理缓存后依然能稳定生成构建产物。
 
 ## 安装
 

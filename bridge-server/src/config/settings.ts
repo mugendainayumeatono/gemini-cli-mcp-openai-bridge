@@ -54,6 +54,11 @@ export interface Settings {
   checkpointing?: CheckpointingSettings;
   autoConfigureMaxOldSpaceSize?: boolean;
   securityPolicy?: SecurityPolicy;
+  security?: {
+    auth?: {
+      selectedType?: AuthType;
+    };
+  };
 
   // Git-aware file filtering settings
   fileFiltering?: {
