@@ -275,13 +275,22 @@ async function startMcpServer() {
   const openAIRouter = createOpenAIRouter(config, debugMode);
   app.use('/v1', openAIRouter);
 
-  app.listen(port, host, () => {
+  const server = app.listen(port, host, () => {
     logger.info('Server running', {
       port,
       host,
       mcpUrl: `http://${host}:${port}/mcp`,
       openAIUrl: `http://${host}:${port}/v1`,
     });
+  });
+
+  server.on('error', (error: any) => {
+    if (error.code === 'EADDRINUSE') {
+      logger.error(`Port ${port} is already in use on ${host}. Please use --port to specify a different port.`);
+    } else {
+      logger.error('Failed to start server:', error);
+    }
+    process.exit(1);
   });
 }
 
